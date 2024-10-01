@@ -12,14 +12,54 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class IInteractionInterface;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+USTRUCT()
+struct FInteractionData
+{
+	GENERATED_USTRUCT_BODY()
+
+	FInteractionData() :
+	CurrentInteractable(nullptr),
+	LastInteractionCheckTime(0.0f)
+	{
+		
+	};
+
+	UPROPERTY()
+	AActor* CurrentInteractable;
+
+	UPROPERTY()
+	float LastInteractionCheckTime;
+};
 
 UCLASS(config=Game)
 class AInventoryCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+public:
+	//=====================================================================================
+	//                                   FUNCTIONS
+	//=====================================================================================
+	AInventoryCharacter();
+
+	//=====================================================================================
+	//                            FORCEINLINE FUNCTIONS
+	//=====================================================================================
+	
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+protected:
+	//=====================================================================================
+	//                            PROPERTIES & VARIABLES
+	//=====================================================================================
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -44,30 +84,44 @@ class AInventoryCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-public:
-	AInventoryCharacter();
+	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
+	TScriptInterface<IInteractionInterface> TargetInteractable;
+
+	float InteractionCheckFrequency;
+
+	float InteractionCheckDistance;
+
+	FTimerHandle TimerHandle_Interaction;
+
+	FInteractionData InteractionData;
+
+	//=====================================================================================
+	//                                   FUNCTION
+	//=====================================================================================
+	void PerformInteractionCheck();
 	
+	void FoundInteractable(AActor* NewInteractable);
 
-protected:
+	void NoInteractableFound();
 
+	void EndInteract();
+
+	void Interact();
+
+	// To add mapping context
+	virtual void BeginPlay();
+	
+	virtual void Tick(float DeltaSeconds) override;
+	
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
-
-protected:
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
-	// To add mapping context
-	virtual void BeginPlay();
-
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
+
 
