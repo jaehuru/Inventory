@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "InteractionInterface.generated.h"
 
+class AInventoryCharacter;
+
 UENUM()
 enum class EInteractableType : uint8
 {
@@ -66,17 +68,18 @@ class INVENTORY_API IInteractionInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	//=====================================================================================
+	//                            PROPERTIES & VARIABLES
+	//=====================================================================================
+	FInteractableData InteractableData;
+	
+	//=====================================================================================
 	//                                   FUNCTIONS
 	//=====================================================================================
 	virtual void BeginFocus();
 	virtual void EndFocus();
 	virtual void BeginInteract();
 	virtual void EndInteract();
-	virtual void Interact();
-
-	//=====================================================================================
-	//                            PROPERTIES & VARIABLES
-	//=====================================================================================
-	FInteractableData InteractableData;
+	virtual void Interact(AInventoryCharacter* PlayerCharacter);
+	
 	
 };
