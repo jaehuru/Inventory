@@ -55,6 +55,8 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(TimerHandle_Interaction); }
+
 protected:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
@@ -84,11 +86,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** 대상 상호 작용 가능 */
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<IInteractionInterface> TargetInteractable;
 
+	/** 상호작용 빈도 확인 */
 	float InteractionCheckFrequency;
 
+	/** 상호작용 거리 확인 */
 	float InteractionCheckDistance;
 
 	FTimerHandle TimerHandle_Interaction;
@@ -99,13 +104,10 @@ protected:
 	//                                   FUNCTION
 	//=====================================================================================
 	void PerformInteractionCheck();
-	
 	void FoundInteractable(AActor* NewInteractable);
-
 	void NoInteractableFound();
-
+	void BeginInteract();
 	void EndInteract();
-
 	void Interact();
 
 	// To add mapping context

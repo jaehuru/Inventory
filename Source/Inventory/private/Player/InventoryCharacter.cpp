@@ -10,12 +10,11 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "DrawDebugHelpers.h"
 #include "Interfaces/InteractionInterface.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-//////////////////////////////////////////////////////////////////////////
-// AInventoryCharacter
+DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AInventoryCharacter::AInventoryCharacter()
 {
@@ -52,6 +51,9 @@ AInventoryCharacter::AInventoryCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	InteractionCheckFrequency = 0.1;
+	InteractionCheckDistance = 225.f;
+
+	BaseEyeHeight = 80.f;
 }
 
 void AInventoryCharacter::BeginPlay()
@@ -97,6 +99,9 @@ void AInventoryCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AInventoryCharacter::Look);
 	}
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AInventoryCharacter::BeginInteract);
+	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AInventoryCharacter::EndInteract);
 }
 
 void AInventoryCharacter::PerformInteractionCheck()
@@ -106,30 +111,37 @@ void AInventoryCharacter::PerformInteractionCheck()
 	FVector TraceStart{ GetPawnViewLocation() };
 	FVector TraceEnd{ TraceStart + (GetViewRotation().Vector() * InteractionCheckDistance) };
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	FHitResult TraceHit;
+	float LookDirection = FVector::DotProduct(GetActorForwardVector(), GetViewRotation().Vector());
 
-	if (GetWorld()->LineTraceSingleByChannel(
-		TraceHit,
-		TraceStart,
-		TraceEnd,
-		ECC_Visibility,
-		QueryParams))
+	if (LookDirection > 0)
 	{
-		if (TraceHit.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass()))
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		FHitResult TraceHit;
+
+		if (GetWorld()->LineTraceSingleByChannel(
+			TraceHit,
+			TraceStart,
+			TraceEnd,
+			ECC_Visibility,
+			QueryParams))
 		{
-			const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
-
-			if (TraceHit.GetActor() != InteractionData.CurrentInteractable && Distance <= InteractionCheckDistance)
+			if (TraceHit.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass()))
 			{
-				FoundInteractable(TraceHit.GetActor());
-				return;
-			}
+				const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
 
-			if (TraceHit.GetActor() == InteractionData.CurrentInteractable)
-			{
-				return;
+				if (TraceHit.GetActor() != InteractionData.CurrentInteractable && Distance <= InteractionCheckDistance)
+				{
+					FoundInteractable(TraceHit.GetActor());
+					return;
+				}
+
+				if (TraceHit.GetActor() == InteractionData.CurrentInteractable)
+				{
+					return;
+				}
 			}
 		}
 	}
@@ -139,18 +151,90 @@ void AInventoryCharacter::PerformInteractionCheck()
 
 void AInventoryCharacter::FoundInteractable(AActor* NewInteractable)
 {
+	if (IsInteracting())
+	{
+		EndInteract();
+	}
+
+	if (InteractionData.CurrentInteractable)
+	{
+		TargetInteractable = InteractionData.CurrentInteractable;
+		TargetInteractable->EndFocus();
+	}
+
+	InteractionData.CurrentInteractable = NewInteractable;
+	TargetInteractable = NewInteractable;
+
+	TargetInteractable->BeginFocus();
 }
 
 void AInventoryCharacter::NoInteractableFound()
 {
+	if (IsInteracting())
+	{
+		GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+	}
+
+	if (InteractionData.CurrentInteractable)
+	{
+		if (IsValid(TargetInteractable.GetObject()))
+		{
+			TargetInteractable->EndFocus();
+		}
+
+		// Todo: HUD에서 상호 작용 위젯 숨기기
+
+		InteractionData.CurrentInteractable = nullptr;
+		TargetInteractable = nullptr;
+	}
+}
+
+void AInventoryCharacter::BeginInteract()
+{
+	// 상호 작용을 시작한 이후 상호 작용 가능한 상태에서 아무것도 변경되지 않았는지 확인함
+	PerformInteractionCheck();
+
+	if (InteractionData.CurrentInteractable)
+	{
+		if (IsValid(TargetInteractable.GetObject()))
+		{
+			TargetInteractable->BeginInteract();
+
+			if (FMath::IsNearlyZero(TargetInteractable->InteractableData.InteractionDuration, 0.1f))
+			{
+				Interact();
+			}
+			else
+			{
+				GetWorldTimerManager().SetTimer(
+					TimerHandle_Interaction,
+					this,
+					&AInventoryCharacter::Interact,
+					TargetInteractable->InteractableData.InteractionDuration,
+					false);
+			}
+		}
+	}
 }
 
 void AInventoryCharacter::EndInteract()
 {
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->EndInteract();
+	}
 }
 
 void AInventoryCharacter::Interact()
 {
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->Interact();
+	}
 }
 
 void AInventoryCharacter::Move(const FInputActionValue& Value)

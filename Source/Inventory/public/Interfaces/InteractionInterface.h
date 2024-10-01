@@ -69,13 +69,9 @@ public:
 	//                                   FUNCTIONS
 	//=====================================================================================
 	virtual void BeginFocus();
-
 	virtual void EndFocus();
-
 	virtual void BeginInteract();
-	
 	virtual void EndInteract();
-
 	virtual void Interact();
 
 	//=====================================================================================

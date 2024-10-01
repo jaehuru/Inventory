@@ -20,16 +20,19 @@ public:
 	//=====================================================================================
 	// UPROPERTY()
 	// UInventoryComponent* OwningInventory;
-	
+
+	/** 아이템 양 */
 	UPROPERTY(VisibleAnywhere, Category = "Item Data", meta = (UIMin = 1, UIMax = 100))
 	int32 Quantity;
 	
 	UPROPERTY(EditAnywhere, Category = "Item Data")
 	FName ID;
 
+	/** 아이템 특성 */
 	UPROPERTY(EditAnywhere, Category = "Item Data")
 	EItemQuality ItemQuality;
 
+	/** 아이템 타입 */
 	UPROPERTY(EditAnywhere, Category = "Item Data")
 	EItemType ItemType;
 
