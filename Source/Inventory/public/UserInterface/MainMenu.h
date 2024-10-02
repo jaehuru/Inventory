@@ -16,7 +16,18 @@ class INVENTORY_API UMainMenu : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	//=====================================================================================
+	//                            PROPERTIES & VARIABLES
+	//=====================================================================================
 	UPROPERTY()
 	AInventoryCharacter* PlayerCharacter;
+
+protected:
+	//=====================================================================================
+	//                                   FUNCTIONS
+	//=====================================================================================
+	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	
 };

@@ -23,6 +23,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Text Actor")
 	UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditInstanceOnly, Category = "Text Actor")
+	FInteractableData InstanceInteractableData;
+
 	//=====================================================================================
 	//                                   FUNCTIONS
 	//=====================================================================================
