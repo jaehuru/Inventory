@@ -61,7 +61,7 @@ void AInventoryHUD::HideInteractionWidget() const
 {
 	if (InteractionWidget)
 	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Visible); //Visible 인지?? 
+		InteractionWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
