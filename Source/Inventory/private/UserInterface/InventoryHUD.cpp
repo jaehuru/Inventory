@@ -49,7 +49,7 @@ void AInventoryHUD::HideMenu()
 	}
 }
 
-void AInventoryHUD::ShowInteractionWidget()
+void AInventoryHUD::ShowInteractionWidget() const
 {
 	if (InteractionWidget)
 	{
@@ -57,15 +57,15 @@ void AInventoryHUD::ShowInteractionWidget()
 	}
 }
 
-void AInventoryHUD::HideInteractionWidget()
+void AInventoryHUD::HideInteractionWidget() const
 {
 	if (InteractionWidget)
 	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Collapsed);  //Visible?
+		InteractionWidget->SetVisibility(ESlateVisibility::Visible); //Visible 인지?? 
 	}
 }
 
-void AInventoryHUD::UpdateInteractionWidget(const FInteractableData* InteractableData)
+void AInventoryHUD::UpdateInteractionWidget(const FInteractableData* InteractableData) const
 {
 	if (InteractionWidget)
 	{
@@ -74,7 +74,7 @@ void AInventoryHUD::UpdateInteractionWidget(const FInteractableData* Interactabl
 			InteractionWidget->SetVisibility(ESlateVisibility::Visible);
 		}
 
-		//InteractionWidget->UpdateWidget(InteractableData);
+		InteractionWidget->UpdateWidget(InteractableData);
 	}
 }
 

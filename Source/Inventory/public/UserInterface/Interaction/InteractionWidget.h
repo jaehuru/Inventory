@@ -28,7 +28,7 @@ public:
 	//=====================================================================================
 	//                                   FUNCTIONS
 	//=====================================================================================
-	void UpdateWidget(const FInteractableData* InteractableData);
+	void UpdateWidget(const FInteractableData* InteractableData) const;
 
 protected:
 	//=====================================================================================

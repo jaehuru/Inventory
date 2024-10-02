@@ -1,6 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-
+// Game
 #include "Player/InventoryCharacter.h"
+#include "Interfaces/InteractionInterface.h"
+#include "UserInterface/InventoryHUD.h"
+
+// Engine
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,7 +15,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "DrawDebugHelpers.h"
-#include "Interfaces/InteractionInterface.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -60,6 +63,8 @@ void AInventoryCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	HUD = Cast<AInventoryHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 }
 
 void AInventoryCharacter::Tick(float DeltaSeconds)
@@ -163,6 +168,8 @@ void AInventoryCharacter::FoundInteractable(AActor* NewInteractable)
 	InteractionData.CurrentInteractable = NewInteractable;
 	TargetInteractable = NewInteractable;
 
+	HUD->UpdateInteractionWidget(&TargetInteractable->InteractableData);
+
 	TargetInteractable->BeginFocus();
 }
 
@@ -180,7 +187,7 @@ void AInventoryCharacter::NoInteractableFound()
 			TargetInteractable->EndFocus();
 		}
 
-		// Todo: HUD에서 상호 작용 위젯 숨기기
+		HUD->HideInteractionWidget();
 
 		InteractionData.CurrentInteractable = nullptr;
 		TargetInteractable = nullptr;
