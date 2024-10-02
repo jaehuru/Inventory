@@ -43,6 +43,10 @@ class AInventoryCharacter : public ACharacter
 
 public:
 	//=====================================================================================
+	//                            PROPERTIES & VARIABLES
+	//=====================================================================================
+	
+	//=====================================================================================
 	//                                   FUNCTIONS
 	//=====================================================================================
 	AInventoryCharacter();
@@ -89,7 +93,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-	/** 대상 상호 작용 가능 */
+	/** 대상 상호 작용 가능 여부 */
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<IInteractionInterface> TargetInteractable;
 

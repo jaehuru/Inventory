@@ -79,7 +79,7 @@ void APickup::EndFocus()
 {
 	if (PickupMesh)
 	{
-		PickupMesh->SetRenderCustomDepth(true);
+		PickupMesh->SetRenderCustomDepth(false);
 	}
 }
 
