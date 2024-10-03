@@ -4,7 +4,6 @@
 #include "Interfaces/InteractionInterface.h"
 #include "UserInterface/InventoryHUD.h"
 #include "Components/InventoryComponent.h"
-
 // Engine
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -112,6 +111,8 @@ void AInventoryCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AInventoryCharacter::BeginInteract);
 	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AInventoryCharacter::EndInteract);
+
+	PlayerInputComponent->BindAction("ToggleMenu", IE_Pressed, this, &AInventoryCharacter::ToggleMenu);
 }
 
 void AInventoryCharacter::PerformInteractionCheck()
@@ -253,6 +254,11 @@ void AInventoryCharacter::UpdateInteractionWidget() const
 	{
 		HUD->UpdateInteractionWidget(&TargetInteractable->InteractableData);
 	}
+}
+
+void AInventoryCharacter::ToggleMenu() 
+{
+	HUD->ToggleMenu();
 }
 
 void AInventoryCharacter::Move(const FInputActionValue& Value)

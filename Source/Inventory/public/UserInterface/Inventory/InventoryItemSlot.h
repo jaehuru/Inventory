@@ -4,65 +4,71 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Player/InventoryCharacter.h"
-#include "InventoryPanel.generated.h"
+#include "InventoryItemSlot.generated.h"
 
-class UInventoryItemSlot;
-class UWrapBox;
 class UTextBlock;
-class UInventoryCharacter;
-class UInventoryComponent;
+class UImage;
+class UBorder;
+class UInventoryTooltip;
+class UDragItemVisual;
+class UItemBase;
 /**
  * 
  */
 UCLASS()
-class INVENTORY_API UInventoryPanel : public UUserWidget
+class INVENTORY_API UInventoryItemSlot : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
-	UPROPERTY(meta = (BindWidget))
-	UWrapBox* InventoryPanel;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* WeightInfo;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CapacityInfo;
-
-	UPROPERTY()
-	AInventoryCharacter* PlayerCharacter;
-
-	UPROPERTY()
-	UInventoryComponent* InventoryReference;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UInventoryItemSlot> InventorySlotClass;
 	
 	//=====================================================================================
 	//                                   FUNCTION
 	//=====================================================================================
-	UFUNCTION()
-	void RefreshInventory();
-
+	
 	//=====================================================================================
 	//                            FORCEINLINE FUNCTIONS
 	//=====================================================================================
+	FORCEINLINE UItemBase* GetItemReference() const { return ItemReference; }
+	
+	FORCEINLINE void SetItemReference(UItemBase* ItemIn) { ItemReference = ItemIn; }
 
 protected:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Slot")
+	TSubclassOf<UDragItemVisual> DragItemVisualClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Slot")
+	TSubclassOf<UInventoryTooltip> ToolTipClass;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Inventory Slot")
+	UItemBase* ItemReference;
 
+	UPROPERTY(VisibleAnywhere, Category = "Inventory Slot")
+	UBorder* ItemBorder;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory Slot")
+	UImage* ItemIcon;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory Slot")
+	UTextBlock* ItemQuantity;
 	//=====================================================================================
 	//                                   FUNCTION
 	//=====================================================================================
-	void SetInfoText() const;
-	
 	virtual void NativeOnInitialized() override;
+	
+	virtual void NativeConstruct() override;
+	
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
+	
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 	
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 };

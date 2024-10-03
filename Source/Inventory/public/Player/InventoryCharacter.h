@@ -117,17 +117,20 @@ protected:
 	//=====================================================================================
 	//                                   FUNCTION
 	//=====================================================================================
+	
+	// To add mapping context
+	virtual void BeginPlay();
+	
+	virtual void Tick(float DeltaSeconds) override;
+
+	void ToggleMenu();
+
 	void PerformInteractionCheck();
 	void FoundInteractable(AActor* NewInteractable);
 	void NoInteractableFound();
 	void BeginInteract();
 	void EndInteract();
 	void Interact();
-
-	// To add mapping context
-	virtual void BeginPlay();
-	
-	virtual void Tick(float DeltaSeconds) override;
 	
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

@@ -4,65 +4,58 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Player/InventoryCharacter.h"
-#include "InventoryPanel.generated.h"
+#include "InventoryTooltip.generated.h"
 
-class UInventoryItemSlot;
-class UWrapBox;
 class UTextBlock;
-class UInventoryCharacter;
-class UInventoryComponent;
+class UInventoryItemSlot;
 /**
  * 
  */
 UCLASS()
-class INVENTORY_API UInventoryPanel : public UUserWidget
+class INVENTORY_API UInventoryTooltip : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
-	UPROPERTY(meta = (BindWidget))
-	UWrapBox* InventoryPanel;
+	UPROPERTY(VisibleAnywhere)
+	UInventoryItemSlot* InventorySlotBeingHovered;
 
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* WeightInfo;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CapacityInfo;
-
-	UPROPERTY()
-	AInventoryCharacter* PlayerCharacter;
-
-	UPROPERTY()
-	UInventoryComponent* InventoryReference;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UInventoryItemSlot> InventorySlotClass;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ItemName;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ItemType;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* DamageValue;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ArmorRating;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* UsageText;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ItemDescription;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* MaxStackSize;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SellValue;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* StackWeight;
 	
 	//=====================================================================================
 	//                                   FUNCTION
 	//=====================================================================================
-	UFUNCTION()
-	void RefreshInventory();
-
+	
 	//=====================================================================================
 	//                            FORCEINLINE FUNCTIONS
 	//=====================================================================================
-
 protected:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
-
+	
 	//=====================================================================================
 	//                                   FUNCTION
 	//=====================================================================================
-	void SetInfoText() const;
-	
-	virtual void NativeOnInitialized() override;
-	
-	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+	virtual void NativeConstruct() override;
 };

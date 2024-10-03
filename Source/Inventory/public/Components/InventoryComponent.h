@@ -106,7 +106,7 @@ public:
 	//                           FORCEINLINE FUNCTIONS
 	//=====================================================================================
 	UFUNCTION(Category = "Inventory")
-	FORCEINLINE float GetInventoryWeight() const { return InventoryTotalWeight; }
+	FORCEINLINE float GetInventoryTotalWeight() const { return InventoryTotalWeight; }
 	UFUNCTION(Category = "Inventory")
 	FORCEINLINE float GetInventoryWeightCapacity() const { return InventoryWeightCapacity; }
 	UFUNCTION(Category = "Inventory")
