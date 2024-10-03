@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "InventoryCharacter.generated.h"
 
+class UInventoryComponent;
 class AInventoryHUD;
 class USpringArmComponent;
 class UCameraComponent;
@@ -51,6 +52,8 @@ public:
 	//=====================================================================================
 	AInventoryCharacter();
 
+	void UpdateInteractionWidget() const;
+
 	//=====================================================================================
 	//                            FORCEINLINE FUNCTIONS
 	//=====================================================================================
@@ -61,6 +64,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(TimerHandle_Interaction); }
+	FORCEINLINE UInventoryComponent* GetPlayerInventory() const { return PlayerInventory; }
 
 protected:
 	//=====================================================================================
@@ -96,6 +100,9 @@ protected:
 	/** 대상 상호 작용 가능 여부 */
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<IInteractionInterface> TargetInteractable;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory")
+	UInventoryComponent* PlayerInventory;
 
 	/** 상호작용 빈도 확인 */
 	float InteractionCheckFrequency;

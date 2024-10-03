@@ -14,8 +14,8 @@ UENUM(BlueprintType)
 enum class EItemAddResult : uint8
 {
 	EAR_NoItemAdded UMETA(DisplayName = "No Item added"),
-	EAR_ParialAmountItemAddedUMETA UMETA(DisplayName = "Partial amount of Item added"),
-	EAR_AllItemAddedUMETA UMETA(DisplayName = "All of Item added")
+	EAR_ParialAmountItemAdded UMETA(DisplayName = "Partial amount of Item added"),
+	EAR_AllItemAdded UMETA(DisplayName = "All of Item added")
 };
 
 USTRUCT(BlueprintType)
@@ -54,7 +54,7 @@ struct FItemAddResult
 	{
 		FItemAddResult AddedPartialResult;
 		AddedPartialResult.ActualAmountAdded = PartialAmountAdded;
-		AddedPartialResult.OperationResult = EItemAddResult::EAR_ParialAmountItemAddedUMETA;
+		AddedPartialResult.OperationResult = EItemAddResult::EAR_ParialAmountItemAdded;
 		AddedPartialResult.ResultMessage = ErrorText;
 		return AddedPartialResult;
 	};
@@ -62,7 +62,7 @@ struct FItemAddResult
 	{
 		FItemAddResult AddedAllResult;
 		AddedAllResult.ActualAmountAdded = AmountAdded;
-		AddedAllResult.OperationResult = EItemAddResult::EAR_AllItemAddedUMETA;
+		AddedAllResult.OperationResult = EItemAddResult::EAR_AllItemAdded;
 		AddedAllResult.ResultMessage = Message;
 		return AddedAllResult;
 	};
@@ -96,7 +96,7 @@ public:
 	UItemBase* FindNextPartialStack(UItemBase* ItemIn) const;
 	
 	UFUNCTION(Category = "Inventory")
-	void RemoveSingleInstanceOfItem(UItemBase* ItemIn);
+	void RemoveSingleInstanceOfItem(UItemBase* ItemToRemove);
 	UFUNCTION(Category = "Inventory")
 	int32 RemoveAmountOfItem(UItemBase* ItemIn, int32 DesiredAmountToRemove);
 	UFUNCTION(Category = "Inventory")
@@ -138,10 +138,11 @@ protected:
 	//=====================================================================================
 	virtual void BeginPlay() override;
 
-	FItemAddResult HandleNonStackableItem(UItemBase*, int32 RequestedAddAmount);
-	int32 HandleStackableItem(UItemBase*, int32 RequestedAddAmount);
-	int32 CalculateWeightAddAmount(UItemBase*, int32 RequestedAddAmount);
-	int32 CalculateNumberForFullStack(UItemBase* ExistingItem, int32 InitialRequestedAddAmount);
+	int32 CalculateWeightAddAmount(UItemBase* ItemIn, int32 RequestedAddAmount);
+	int32 CalculateNumberForFullStack(UItemBase* StackableItem, int32 InitialRequestedAddAmount);
+	
+	FItemAddResult HandleNonStackableItem(UItemBase* InputItem);
+	int32 HandleStackableItem(UItemBase* ItemIn, int32 RequestedAddAmount);
 	
 	void AddNewItem(UItemBase* Item, const int32 AmountToAdd);
 };

@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/InteractionInterface.h"
-#include "Player/InventoryCharacter.h"
 #include "Pickup.generated.h"
 
 class UItemBase;
+class AInventoryCharacter;
 
 UCLASS()
 class INVENTORY_API APickup : public AActor, public IInteractionInterface

@@ -3,7 +3,9 @@
 
 #include "World/Pickup.h"
 
+#include "Components/InventoryComponent.h"
 #include "Items/ItemBase.h"
+#include "Player/InventoryCharacter.h"
 
 // Sets default values
 APickup::APickup()
@@ -35,7 +37,6 @@ void APickup::InitializePickup(const TSubclassOf<UItemBase> BaseClass, const int
 		ItemReference->ID = ItemData->ID;
 		ItemReference->ItemQuality = ItemData->ItemQuality;
 		ItemReference->ItemType = ItemData->ItemType;
-		// ItemReference->ItemStatistics = ItemData->ItemStatistics;
 		ItemReference->TextData = ItemData->TextData;
 		ItemReference->NumericData = ItemData->NumericData;
 		ItemReference->AssetData = ItemData->AssetData;
@@ -97,12 +98,32 @@ void APickup::TakePickup(const AInventoryCharacter* Taker)
 	{
 		if (ItemReference)
 		{
-			// if (UInventoryComponent* PlayerInventory = Taker->GetInventory())
-			
-			/*
-			인벤토리에 항목 추가 시도
-			추가 작업 결과에 따라 Pickup 조정 또는 파기
-			 */
+			if (UInventoryComponent* PlayerInventory = Taker->GetPlayerInventory())
+			{
+				const FItemAddResult AddResult = PlayerInventory->HandleAddItem(ItemReference);
+
+				switch (AddResult.OperationResult)
+				{
+				case EItemAddResult::EAR_NoItemAdded:
+					break;
+				case EItemAddResult::EAR_ParialAmountItemAdded:
+					UpdateInteractableData();
+					Taker->UpdateInteractionWidget();
+					break;
+				case EItemAddResult::EAR_AllItemAdded:
+					Destroy();
+					break;
+				}
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *AddResult.ResultMessage.ToString());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Plater inventory component is null!"));
+			}
+		}
+		else
+		{
+				UE_LOG(LogTemp, Warning, TEXT("Pickup internal item reference was somehow null!"));
 		}
 	}
 }
