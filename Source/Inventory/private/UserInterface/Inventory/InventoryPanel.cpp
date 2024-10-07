@@ -48,6 +48,8 @@ void UInventoryPanel::RefreshInventory()
 
 			InventoryPanel->AddChildToWrapBox(ItemSlot);
 		}
+
+		SetInfoText();
 	}
 }
 
