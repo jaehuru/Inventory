@@ -17,7 +17,7 @@ class INVENTORY_API UDragItemVisual : public UUserWidget
 {
 	GENERATED_BODY()
 
-protected:
+public:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================

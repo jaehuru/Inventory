@@ -2,10 +2,10 @@
 
 
 #include "UserInterface/Inventory/InventoryTooltip.h"
-
-#include "Components/TextBlock.h"
 #include "Items/ItemBase.h"
 #include "UserInterface/Inventory/InventoryItemSlot.h"
+
+#include "Components/TextBlock.h"
 
 void UInventoryTooltip::NativeConstruct()
 {

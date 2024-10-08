@@ -283,6 +283,10 @@ void AInventoryCharacter::DropItem(UItemBase* ItemToDrop, const int32 QuantityTo
 
 		Pickup->InitializeDrop(ItemToDrop, RemovedQuantity);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Item to drop was somehow null!"));
+	}
 }
 
 void AInventoryCharacter::Move(const FInputActionValue& Value)

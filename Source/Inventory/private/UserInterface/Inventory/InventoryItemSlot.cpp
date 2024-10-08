@@ -2,12 +2,14 @@
 
 
 #include "UserInterface/Inventory/InventoryItemSlot.h"
+#include "Items/ItemBase.h"
+#include "UserInterface/Inventory/InventoryTooltip.h"
 
 #include "Components/Border.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "Items/ItemBase.h"
-#include "UserInterface/Inventory/InventoryTooltip.h"
+#include "UserInterface/Inventory/DragItemVisual.h"
+#include "UserInterface/Inventory/ItemDragDropOperation.h"
 
 void UInventoryItemSlot::NativeOnInitialized()
 {
@@ -72,6 +74,23 @@ void UInventoryItemSlot::NativeOnDragDetected(const FGeometry& InGeometry, const
 	UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	if (DragItemVisualClass)
+	{
+		const TObjectPtr<UDragItemVisual> DragVisual = CreateWidget<UDragItemVisual>(this, DragItemVisualClass);
+		DragVisual->ItemIcon->SetBrushFromTexture(ItemReference->AssetData.Icon);
+		DragVisual->ItemBorder->SetBrushColor(ItemBorder->GetBrushColor());
+		DragVisual->ItemQuantity->SetText(FText::AsNumber(ItemReference->Quantity));
+
+		UItemDragDropOperation* DragItemOperation = NewObject<UItemDragDropOperation>();
+		DragItemOperation->SourceItem = ItemReference;
+		DragItemOperation->SourceInventory = ItemReference->OwningInventory;
+
+		DragItemOperation->DefaultDragVisual = DragVisual;
+		DragItemOperation->Pivot = EDragPivot::TopLeft;
+
+		OutOperation = DragItemOperation;
+	}
 }
 
 bool UInventoryItemSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
