@@ -4,6 +4,7 @@
 #include "Interfaces/InteractionInterface.h"
 #include "UserInterface/InventoryHUD.h"
 #include "Components/InventoryComponent.h"
+#include "World/Pickup.h"
 // Engine
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -15,6 +16,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "DrawDebugHelpers.h"
+
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -259,6 +261,28 @@ void AInventoryCharacter::UpdateInteractionWidget() const
 void AInventoryCharacter::ToggleMenu() 
 {
 	HUD->ToggleMenu();
+}
+
+void AInventoryCharacter::DropItem(UItemBase* ItemToDrop, const int32 QuantityToDrop)
+{
+	if (PlayerInventory->FindMatchingItem(ItemToDrop))
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.bNoFail = true;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		const FVector SpawnLocation{ GetActorLocation() + (GetActorForwardVector() * 50.f) };
+		const FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+		const int32 RemovedQuantity = PlayerInventory->RemoveAmountOfItem(ItemToDrop, QuantityToDrop);
+
+		APickup* Pickup = GetWorld()->SpawnActor<APickup>(
+			APickup::StaticClass(),
+			SpawnTransform,
+			SpawnParams);
+
+		Pickup->InitializeDrop(ItemToDrop, RemovedQuantity);
+	}
 }
 
 void AInventoryCharacter::Move(const FInputActionValue& Value)

@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "InventoryCharacter.generated.h"
 
+class UItemBase;
 class UInventoryComponent;
 class AInventoryHUD;
 class USpringArmComponent;
@@ -53,6 +54,8 @@ public:
 	AInventoryCharacter();
 
 	void UpdateInteractionWidget() const;
+
+	void DropItem(UItemBase* ItemToDrop, const int32 QuantityToDrop);
 
 	//=====================================================================================
 	//                            FORCEINLINE FUNCTIONS
