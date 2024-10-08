@@ -30,13 +30,13 @@ void UInventoryPanel::SetInfoText() const
 {
 	const FString WeightInfoValue
 	{
-		FString::SanitizeFloat(InventoryReference->GetInventoryTotalWeight()) + "/"
+		FString::SanitizeFloat(InventoryReference->GetInventoryTotalWeight()) + " / "
 		+ FString::SanitizeFloat(InventoryReference->GetInventoryWeightCapacity())
 	};
 
 	const FString CapacityInfoValue
 	{
-		FString::FromInt(InventoryReference->GetInventoryContents().Num()) + "/"
+		FString::FromInt(InventoryReference->GetInventoryContents().Num()) + " / "
 		+ FString::FromInt(InventoryReference->GetInventorySlotsCapacity())
 	};
 

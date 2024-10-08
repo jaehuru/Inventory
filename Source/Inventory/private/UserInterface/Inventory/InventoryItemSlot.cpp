@@ -38,12 +38,11 @@ void UInventoryItemSlot::NativeConstruct()
 			ItemBorder->SetBrushColor(FLinearColor::Blue);
 			break;
 		case EItemQuality::EIQ_Legendary:
-			ItemBorder->SetBrushColor(FLinearColor(100.f, 65.f, 0.f, 1.f)); //orange color
+			ItemBorder->SetBrushColor(FLinearColor(1.f, 0.45f, 0.f)); //orange color
 			break;
 		case EItemQuality::EIQ_Epic:
 			ItemBorder->SetBrushColor(FLinearColor::Red);
 			break;
-		default: ;
 		}
 
 		ItemIcon->SetBrushFromTexture(ItemReference->AssetData.Icon);
