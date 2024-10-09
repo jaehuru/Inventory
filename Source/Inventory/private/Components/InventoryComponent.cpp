@@ -115,7 +115,7 @@ FItemAddResult UInventoryComponent::HandleNonStackableItem(UItemBase* InputItem)
 	}
 
 	// 무게가 가득찰때
-	if (InventoryTotalWeight + InputItem->GetItemSingleWeight() > InventoryWeightCapacity)
+	if (InventoryTotalWeight + InputItem->GetItemSingleWeight() > GetInventoryWeightCapacity())
 	{
 		return FItemAddResult::AddedNone(FText::Format(FText::FromString(
 			"Could not add {0} to the inventory. Item would overflow weight limit."),
@@ -169,10 +169,9 @@ int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 Requeste
 			AmountToDistribute -= WeightLimitAddAmount;
 
 			ItemIn->SetQuantity(AmountToDistribute);
-
-			// TODO: 무게 용량을 초과하는 것은 절대 불가능한 일이기 때문에 개선
-			// 인벤토리 무게 한도에 도달하면 루프를 반복할 필요 없음
-			if (InventoryTotalWeight >= InventoryWeightCapacity)
+			
+			// 인벤토리 무게 한도가 다른 아이템으로 초과가 된다면 리턴
+			if (InventoryTotalWeight + ExistingItemStack->GetItemSingleWeight() > InventoryWeightCapacity)
 			{
 				OnInventoryUpdated.Broadcast();
 				return RequestedAddAmount - AmountToDistribute;
@@ -186,7 +185,8 @@ int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 Requeste
 				OnInventoryUpdated.Broadcast();
 				return RequestedAddAmount - AmountToDistribute;
 			}
-
+			
+			// 스택이 덜 찼지만 전혀 추가할 수 없는 경우 도달
 			return 0;
 		}
 
@@ -221,14 +221,17 @@ int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 Requeste
 				return RequestedAddAmount - AmountToDistribute;
 			}
 
-			// 스택의 나머지 전체를 추가할 수 있습니다
+			// 스택의 나머지 전체를 추가 가능
 			AddNewItem(ItemIn, AmountToDistribute);
 			return RequestedAddAmount;
 		}
+
+		// 사용 가능한 슬롯이 있지만 남은 무게 용량이 없는 경우 도달
+		return RequestedAddAmount - AmountToDistribute;
 	}
 
-	OnInventoryUpdated.Broadcast();
-	return RequestedAddAmount - AmountToDistribute;
+	// 사용 가능한 슬롯이 없고 남은 무게 용량도 없는 경우 도달
+	return 0;
 }
 
 FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
@@ -249,7 +252,7 @@ FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
 		if (StackableAmountAdded == InitialRequestedAddAmount)
 		{
 			return FItemAddResult::AddedAll(InitialRequestedAddAmount, FText::Format(FText::FromString(
-				"Successfully added {0} to the inventory."),
+				"Successfully added {0} {1} to the inventory."),
 				InitialRequestedAddAmount,
 				InputItem->TextData.Name));
 		}
@@ -258,8 +261,8 @@ FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
 		{
 			return FItemAddResult::AddedPartial(StackableAmountAdded, FText::Format(FText::FromString(
 			"Partial amount of {0} added to the inventory. Number added = {1}"),
-			InitialRequestedAddAmount,
-			InputItem->TextData.Name));
+			InputItem->TextData.Name,
+			StackableAmountAdded));
 		}
 
 		if (StackableAmountAdded <= 0)

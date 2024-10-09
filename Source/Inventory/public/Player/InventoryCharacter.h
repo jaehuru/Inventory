@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "InventoryCharacter.generated.h"
 
+class UTimelineComponent;
 class UItemBase;
 class UInventoryComponent;
 class AInventoryHUD;
@@ -73,13 +74,9 @@ protected:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
-	UPROPERTY()
-	AInventoryHUD* HUD;
-	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
-
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
@@ -87,35 +84,45 @@ protected:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
-
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-	/** 대상 상호 작용 가능 여부 */
-	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
-	TScriptInterface<IInteractionInterface> TargetInteractable;
+	UPROPERTY()
+	AInventoryHUD* HUD;
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory")
 	UInventoryComponent* PlayerInventory;
 
+	/** 대상 상호 작용 가능 여부 */
+	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
+	TScriptInterface<IInteractionInterface> TargetInteractable;
 	/** 상호작용 빈도 확인 */
 	float InteractionCheckFrequency;
-
 	/** 상호작용 거리 확인 */
 	float InteractionCheckDistance;
-
+	/** 상호작용 타이머 */
 	FTimerHandle TimerHandle_Interaction;
-
+	/** 상호작용 데이터 */
 	FInteractionData InteractionData;
+
+	/** 에이밍 카메라 전환에 사용되는 Timeline 변수 */
+	UPROPERTY(VisibleAnywhere, Category = "Character | Camera")
+	FVector DefaultCameraLocation;
+	UPROPERTY(VisibleAnywhere, Category = "Character | Camera")
+	FVector AimingCameraLocation;
+	
+	TObjectPtr<UTimelineComponent> AimingCameraTimeline;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character | Aim Timeline")
+	UCurveFloat* AimingCameraCurve;
+	
 
 	//=====================================================================================
 	//                                   FUNCTION
@@ -137,10 +144,8 @@ protected:
 	
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
-
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	

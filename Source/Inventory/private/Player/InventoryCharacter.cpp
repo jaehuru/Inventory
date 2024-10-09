@@ -16,7 +16,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "DrawDebugHelpers.h"
-
+#include "Components/TimelineComponent.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -54,6 +54,9 @@ AInventoryCharacter::AInventoryCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	AimingCameraTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimingCameraTimeline"));
+	DefaultCameraLocation = FVector{ 0.f, 0.f, 65.f };
 
 	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("PlayerInventory"));
 	PlayerInventory->SetSlotsCapacity(20);
