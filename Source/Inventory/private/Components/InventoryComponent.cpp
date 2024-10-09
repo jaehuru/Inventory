@@ -61,7 +61,7 @@ UItemBase* UInventoryComponent::FindNextPartialStack(UItemBase* ItemIn) const
 int32 UInventoryComponent::CalculateWeightAddAmount(UItemBase* ItemIn, int32 RequestedAddAmount)
 {
 	const int32 WeightMaxAddAmount = FMath::FloorToInt(
-		(GetInventoryWeightCapacity() - InventoryTotalWeight) / ItemIn->GetItemStackWeight());
+		(GetInventoryWeightCapacity() - InventoryTotalWeight) / ItemIn->GetItemSingleWeight());
 	if (WeightMaxAddAmount >= RequestedAddAmount)
 	{
 		return RequestedAddAmount;
@@ -163,7 +163,7 @@ int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 Requeste
 		{
 			// 현재 아이템 스택과 인벤토리 총 무게를 조정
 			ExistingItemStack->SetQuantity(ExistingItemStack->Quantity + WeightLimitAddAmount);
-			InventoryTotalWeight += ExistingItemStack->GetItemSingleWeight() * WeightLimitAddAmount;
+			InventoryTotalWeight += (ExistingItemStack->GetItemSingleWeight() * WeightLimitAddAmount);
 
 			// 분배할 수 있도록 수 조정
 			AmountToDistribute -= WeightLimitAddAmount;
@@ -201,10 +201,10 @@ int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 Requeste
 		ExistingItemStack = FindNextPartialStack(ItemIn);
 	}
 
-	// 더 이상 부분 스택을 찾을 수 없을때, 다른 스택을 추가할 수 있는지 확인
+	// 다른 스택을 찾을 수 없을때, 새로운 스택을 추가할 수 있는지 확인
 	if (InventoryContents.Num() + 1 <= InventorySlotCapacity)
 	{
-		// 남아있는 아이템에서 인벤토리 무게한도에 맞게 최대한 많은 양을 추가하려고 시도
+		// 남아있는 아이템에서 인벤토리 무게에 맞게 최대한 많은 양을 추가하려고 시도
 		const int32 WeightLimitAddAmount = CalculateWeightAddAmount(ItemIn, AmountToDistribute);
 
 		if (WeightLimitAddAmount > 0)
@@ -238,7 +238,7 @@ FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
 		const int32 InitialRequestedAddAmount = InputItem->Quantity;
 
 		// handle non-stackable items
-		if (InputItem->NumericData.bIsStackable)
+		if (!InputItem->NumericData.bIsStackable)
 		{
 			return HandleNonStackableItem(InputItem);
 		}
@@ -256,7 +256,7 @@ FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
 
 		if (StackableAmountAdded < InitialRequestedAddAmount && StackableAmountAdded > 0)
 		{
-			return FItemAddResult::AddedPartial(InitialRequestedAddAmount, FText::Format(FText::FromString(
+			return FItemAddResult::AddedPartial(StackableAmountAdded, FText::Format(FText::FromString(
 			"Partial amount of {0} added to the inventory. Number added = {1}"),
 			InitialRequestedAddAmount,
 			InputItem->TextData.Name));
