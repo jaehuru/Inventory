@@ -103,7 +103,7 @@ protected:
 	TObjectPtr<UInputAction> AimAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> ToggleMenuAction;
+	TObjectPtr<UInputAction> MenuAction;
 
 	UPROPERTY()
 	AInventoryHUD* HUD;
@@ -147,7 +147,8 @@ protected:
 	
 	virtual void Tick(float DeltaSeconds) override;
 
-	void ToggleMenu();
+	void ShowMenu();
+	void HideMenu();
 
 	void Aim();
 	void StopAiming();

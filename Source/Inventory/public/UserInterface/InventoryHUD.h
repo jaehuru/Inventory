@@ -41,9 +41,8 @@ public:
 #pragma region 
 	AInventoryHUD();
 
-	void DisplayMenu();
+	void ShowMenu();
 	void HideMenu();
-	void ToggleMenu();
 
 	void ShowCrosshair();
 	void HideCrosshair();

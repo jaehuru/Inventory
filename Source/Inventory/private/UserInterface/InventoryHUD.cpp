@@ -38,12 +38,16 @@ void AInventoryHUD::BeginPlay()
 }
 
 
-void AInventoryHUD::DisplayMenu()
+void AInventoryHUD::ShowMenu()
 {
 	if (MainMenuWidget)
 	{
 		bIsMenuVisible = true;
 		MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
+
+		const FInputModeGameAndUI InputMode;
+		GetOwningPlayerController()->SetInputMode(InputMode);
+		GetOwningPlayerController()->SetShowMouseCursor(true);
 	}
 }
 
@@ -53,28 +57,14 @@ void AInventoryHUD::HideMenu()
 	{
 		bIsMenuVisible = false;
 		MainMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
-	}
-}
-
-void AInventoryHUD::ToggleMenu()
-{
-	if (bIsMenuVisible)
-	{
-		HideMenu();
 
 		const FInputModeGameOnly InputMode;
 		GetOwningPlayerController()->SetInputMode(InputMode);
 		GetOwningPlayerController()->SetShowMouseCursor(false);
 	}
-	else
-	{
-		DisplayMenu();
-
-		const FInputModeGameAndUI InputMode;
-		GetOwningPlayerController()->SetInputMode(InputMode);
-		GetOwningPlayerController()->SetShowMouseCursor(true);
-	}
 }
+
+
 
 void AInventoryHUD::ShowCrosshair()
 {

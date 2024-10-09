@@ -145,7 +145,8 @@ void AInventoryCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AInventoryCharacter::Aim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AInventoryCharacter::StopAiming);
 
-		EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Started, this, &AInventoryCharacter::ToggleMenu);
+		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Started, this, &AInventoryCharacter::ShowMenu);
+		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Completed, this, &AInventoryCharacter::HideMenu);
 	}
 	
 }
@@ -304,14 +305,19 @@ void AInventoryCharacter::UpdateInteractionWidget() const
 	}
 }
 
-void AInventoryCharacter::ToggleMenu() 
+void AInventoryCharacter::ShowMenu() 
 {
-	HUD->ToggleMenu();
+	HUD->ShowMenu();
 	
 	if (HUD->bIsMenuVisible)
 	{
 		StopAiming();
 	}
+}
+
+void AInventoryCharacter::HideMenu()
+{
+	HUD->HideMenu();
 }
 
 void AInventoryCharacter::Aim()
