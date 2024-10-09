@@ -5,6 +5,7 @@
 #include "UserInterface/InventoryHUD.h"
 #include "Components/InventoryComponent.h"
 #include "World/Pickup.h"
+#include "Player/InventoryPlayerController.h"
 // Engine
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -47,7 +48,7 @@ AInventoryCharacter::AInventoryCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
@@ -57,14 +58,18 @@ AInventoryCharacter::AInventoryCharacter()
 
 	AimingCameraTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimingCameraTimeline"));
 	DefaultCameraLocation = FVector{ 0.f, 0.f, 65.f };
+	AimingCameraLocation = FVector{ 175.f, 50.f, 55.0f };
+	CameraBoom->SocketOffset = DefaultCameraLocation;
 
 	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("PlayerInventory"));
 	PlayerInventory->SetSlotsCapacity(20);
 	PlayerInventory->SetWeightCapacity(50.f);
 
 	InteractionCheckFrequency = 0.1;
-	InteractionCheckDistance = 225.f;
+	InteractionCheckDistance = 200.f;
 
+	// capsule default dimensions = 34.f, 88.f
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 	BaseEyeHeight = 80.f;
 }
 
@@ -73,7 +78,28 @@ void AInventoryCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	HUD = Cast<AInventoryHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	// HUD = Cast<AInventoryHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	MainPlayerController = Cast<AInventoryPlayerController>(GetController());
+	HUD = Cast<AInventoryHUD>(MainPlayerController->GetHUD());
+
+	if (MainPlayerController)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(MainPlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+
+	FOnTimelineFloat AimLerpAlphaValue;
+	FOnTimelineEvent TimelineFinishEvent;
+	AimLerpAlphaValue.BindUFunction(this, FName("UpdateCameraTimeline"));
+	TimelineFinishEvent.BindUFunction(this, FName("CameraTimelineEnd"));
+
+	if (AimingCameraTimeline && AimingCameraCurve)
+	{
+		AimingCameraTimeline->AddInterpFloat(AimingCameraCurve, AimLerpAlphaValue);
+		AimingCameraTimeline->SetTimelineFinishedFunc(TimelineFinishEvent);
+	}
 }
 
 void AInventoryCharacter::Tick(float DeltaSeconds)
@@ -112,19 +138,35 @@ void AInventoryCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AInventoryCharacter::Look);
+
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AInventoryCharacter::BeginInteract);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AInventoryCharacter::EndInteract);
+
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AInventoryCharacter::Aim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AInventoryCharacter::StopAiming);
+
+		EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Started, this, &AInventoryCharacter::ToggleMenu);
 	}
-
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AInventoryCharacter::BeginInteract);
-	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AInventoryCharacter::EndInteract);
-
-	PlayerInputComponent->BindAction("ToggleMenu", IE_Pressed, this, &AInventoryCharacter::ToggleMenu);
+	
 }
 
 void AInventoryCharacter::PerformInteractionCheck()
 {
 	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
 
-	FVector TraceStart{ GetPawnViewLocation() };
+	FVector TraceStart{FVector::ZeroVector};
+	
+	if (!bAiming)
+	{
+		InteractionCheckDistance = 200.f;
+		TraceStart = GetPawnViewLocation();
+	}
+	else
+	{
+		InteractionCheckDistance = 250.f;
+		TraceStart = FollowCamera->GetComponentLocation();
+	}
+	
 	FVector TraceEnd{ TraceStart + (GetViewRotation().Vector() * InteractionCheckDistance) };
 
 	float LookDirection = FVector::DotProduct(GetActorForwardVector(), GetViewRotation().Vector());
@@ -196,6 +238,7 @@ void AInventoryCharacter::NoInteractableFound()
 		if (IsValid(TargetInteractable.GetObject()))
 		{
 			TargetInteractable->EndFocus();
+			EndInteract();
 		}
 
 		HUD->HideInteractionWidget();
@@ -264,6 +307,59 @@ void AInventoryCharacter::UpdateInteractionWidget() const
 void AInventoryCharacter::ToggleMenu() 
 {
 	HUD->ToggleMenu();
+	
+	if (HUD->bIsMenuVisible)
+	{
+		StopAiming();
+	}
+}
+
+void AInventoryCharacter::Aim()
+{
+	if (!HUD->bIsMenuVisible)
+	{
+		bAiming = true;
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->MaxWalkSpeed = 200.f;
+
+		if (AimingCameraTimeline)
+		{
+			AimingCameraTimeline->PlayFromStart();
+		}
+	}
+}
+
+void AInventoryCharacter::StopAiming()
+{
+	if (bAiming)
+	{
+		bAiming = false;
+		bUseControllerRotationYaw = false;
+		HUD->HideCrosshair();
+		GetCharacterMovement()->MaxWalkSpeed = 500.f;
+
+		if (AimingCameraTimeline)
+		{
+			AimingCameraTimeline->Reverse();
+		}
+	}
+}
+
+void AInventoryCharacter::UpdateCameraTimeline(const float TimelineValue) const
+{
+	const FVector CameraLocation = FMath::Lerp(DefaultCameraLocation, AimingCameraLocation, TimelineValue);
+	CameraBoom->SocketOffset = CameraLocation;
+}
+
+void AInventoryCharacter::CameraTimelineEnd()
+{
+	if (AimingCameraTimeline)
+	{
+		if (AimingCameraTimeline->GetPlaybackPosition() != 0.f)
+		{
+			HUD->ShowCrosshair();
+		}
+	}
 }
 
 void AInventoryCharacter::DropItem(UItemBase* ItemToDrop, const int32 QuantityToDrop)

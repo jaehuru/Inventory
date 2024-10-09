@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
 #include "Interfaces/InteractionInterface.h"
 #include "Pickup.generated.h"
 
@@ -28,7 +28,7 @@ public:
 	// Sets default values for this actor's properties
 	APickup();
 
-	void InitializePickup(const TSubclassOf<UItemBase> BaseClass, const int32 InQuantity);
+	void InitializePickup(const int32 InQuantity);
 
 	void InitializeDrop(UItemBase* ItemToDrop, const int32 InQuantity);
 
@@ -47,21 +47,18 @@ protected:
 	//=====================================================================================
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Components")
 	UStaticMeshComponent* PickupMesh;
-
-	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Database")
-	UDataTable* ItemDataTable;
-
-	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
-	FName DesiredItemID;
-
+	
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Item Reference")
-	UItemBase* ItemReference;
+	TObjectPtr<UItemBase> ItemReference;
 
+	UPROPERTY(VisibleInstanceOnly, Category = "Pickup | Interaction Data")
+	FInteractableData InstanceInteractableData;
+	
 	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
 	int32 ItemQuantity;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "Pickup | Interaction")
-	FInteractableData InstanceInteractableData;
+	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
+	FDataTableRowHandle ItemRowHandle;
 	
 	//=====================================================================================
 	//                                   FUNCTION
@@ -71,7 +68,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Interact(AInventoryCharacter* PlayerCharacter) override;
-
 	void UpdateInteractableData();
 	
 	void TakePickup(const AInventoryCharacter* Taker);

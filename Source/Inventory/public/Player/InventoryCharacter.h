@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "InventoryCharacter.generated.h"
 
+class AInventoryPlayerController;
 class UTimelineComponent;
 class UItemBase;
 class UInventoryComponent;
@@ -48,6 +49,7 @@ public:
 	//=====================================================================================
 	//                            PROPERTIES & VARIABLES
 	//=====================================================================================
+	bool bAiming;
 	
 	//=====================================================================================
 	//                                   FUNCTIONS
@@ -93,9 +95,21 @@ protected:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> InteractAction;
+
+	UPROPERTY(EditAnywhere, Category="Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> AimAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ToggleMenuAction;
 
 	UPROPERTY()
 	AInventoryHUD* HUD;
+
+	UPROPERTY()
+	TObjectPtr<AInventoryPlayerController> MainPlayerController;
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory")
 	UInventoryComponent* PlayerInventory;
@@ -134,6 +148,13 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	void ToggleMenu();
+
+	void Aim();
+	void StopAiming();
+	UFUNCTION()
+	void UpdateCameraTimeline(const float TimelineValue) const;
+	UFUNCTION()
+	void CameraTimelineEnd();
 
 	void PerformInteractionCheck();
 	void FoundInteractable(AActor* NewInteractable);
