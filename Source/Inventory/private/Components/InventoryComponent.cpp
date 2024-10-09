@@ -139,7 +139,96 @@ FItemAddResult UInventoryComponent::HandleNonStackableItem(UItemBase* InputItem)
 
 int32 UInventoryComponent::HandleStackableItem(UItemBase* ItemIn, int32 RequestedAddAmount)
 {
-	return 0;
+	if (RequestedAddAmount <= 0 || FMath::IsNearlyZero(ItemIn->GetItemStackWeight()))
+	{
+		// 무효한 아이템 데이터
+		return 0;
+	}
+	
+	int32 AmountToDistribute = RequestedAddAmount;
+
+	// 아이템이 인벤토리에 이미 존재하고 풀스택이 아닌지 확인
+	UItemBase* ExistingItemStack = FindNextPartialStack(ItemIn);
+
+	// 아이템 풀스택 되었을때 나누기
+	while (ExistingItemStack)
+	{
+		// 풀스택이 되려면 필요수량이 어느정도인지 계산
+		const int32 AmountToMakeFullStack = CalculateNumberForFullStack(ExistingItemStack, AmountToDistribute);
+		// 무게 한도를 기준으로 들고올 수 있는 'AmountToMakeFullStack'의 수를 계산
+		const int32 WeightLimitAddAmount = CalculateWeightAddAmount(ExistingItemStack, AmountToMakeFullStack);
+
+		// 아이템의 남은 양이 무게 용량을 초과하지 않을때
+		if (WeightLimitAddAmount > 0)
+		{
+			// 현재 아이템 스택과 인벤토리 총 무게를 조정
+			ExistingItemStack->SetQuantity(ExistingItemStack->Quantity + WeightLimitAddAmount);
+			InventoryTotalWeight += ExistingItemStack->GetItemSingleWeight() * WeightLimitAddAmount;
+
+			// 분배할 수 있도록 수 조정
+			AmountToDistribute -= WeightLimitAddAmount;
+
+			ItemIn->SetQuantity(AmountToDistribute);
+
+			// TODO: 무게 용량을 초과하는 것은 절대 불가능한 일이기 때문에 개선
+			// 인벤토리 무게 한도에 도달하면 루프를 반복할 필요 없음
+			if (InventoryTotalWeight >= InventoryWeightCapacity)
+			{
+				OnInventoryUpdated.Broadcast();
+				return RequestedAddAmount - AmountToDistribute;
+			}
+		}
+		else if (WeightLimitAddAmount <= 0)
+		{
+			if (AmountToDistribute != RequestedAddAmount)
+			{
+				// 여러 스택에 분산시키고 그 과정에서 무게 제한에 부딪히면 이곳에 도달
+				OnInventoryUpdated.Broadcast();
+				return RequestedAddAmount - AmountToDistribute;
+			}
+
+			return 0;
+		}
+
+		if (AmountToDistribute <= 0)
+		{
+			// 아이템들이 기존 스택에 분산
+			OnInventoryUpdated.Broadcast();
+			return RequestedAddAmount;
+		}
+
+		// 다른 유효한 부분 스택이 있는지 확인
+		ExistingItemStack = FindNextPartialStack(ItemIn);
+	}
+
+	// 더 이상 부분 스택을 찾을 수 없을때, 다른 스택을 추가할 수 있는지 확인
+	if (InventoryContents.Num() + 1 <= InventorySlotCapacity)
+	{
+		// 남아있는 아이템에서 인벤토리 무게한도에 맞게 최대한 많은 양을 추가하려고 시도
+		const int32 WeightLimitAddAmount = CalculateWeightAddAmount(ItemIn, AmountToDistribute);
+
+		if (WeightLimitAddAmount > 0)
+		{
+			// 분배할 아이템이 더 있는데 무게 제한에 도달한 경우
+			if (WeightLimitAddAmount < AmountToDistribute)
+			{
+				// 아이템을 조정하고 보유할 수 있는 만큼의 새 스택을 추가합니다
+				AmountToDistribute -= WeightLimitAddAmount;
+				ItemIn->SetQuantity(AmountToDistribute);
+
+				// 부분 스택만 추가되므로 사본 만들기
+				AddNewItem(ItemIn->CreateItemCopy(), WeightLimitAddAmount);
+				return RequestedAddAmount - AmountToDistribute;
+			}
+
+			// 스택의 나머지 전체를 추가할 수 있습니다
+			AddNewItem(ItemIn, AmountToDistribute);
+			return RequestedAddAmount;
+		}
+	}
+
+	OnInventoryUpdated.Broadcast();
+	return RequestedAddAmount - AmountToDistribute;
 }
 
 FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
