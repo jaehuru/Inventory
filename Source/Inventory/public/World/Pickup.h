@@ -7,6 +7,7 @@
 #include "Interfaces/InteractionInterface.h"
 #include "Pickup.generated.h"
 
+class UBoxComponent;
 class UItemBase;
 class AInventoryCharacter;
 
@@ -47,6 +48,9 @@ protected:
 	//=====================================================================================
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Components")
 	UStaticMeshComponent* PickupMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Pickup | Components")
+	UBoxComponent* CollisionBox;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Item Reference")
 	TObjectPtr<UItemBase> ItemReference;

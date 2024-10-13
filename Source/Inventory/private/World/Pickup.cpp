@@ -3,6 +3,8 @@
 
 #include "World/Pickup.h"
 
+#include "AudioDevice.h"
+#include "Components/BoxComponent.h"
 #include "Components/InventoryComponent.h"
 #include "Items/ItemBase.h"
 #include "Player/InventoryCharacter.h"
@@ -12,10 +14,20 @@ APickup::APickup()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
+	
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
+	PickupMesh->SetupAttachment(RootComponent);
 	PickupMesh->SetSimulatePhysics(true);
-	SetRootComponent(PickupMesh);
+
+	// 메쉬에 대한 콜리전 설정
+	PickupMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	PickupMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+
+	// 콜리전 응답 설정 (Visibility, WorldStatic은 Block, 나머지는 Ignore)
+	PickupMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	PickupMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	PickupMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	
 }
 
 // Called when the game starts or when spawned
